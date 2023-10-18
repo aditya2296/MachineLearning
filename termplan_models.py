@@ -3,30 +3,14 @@ import numpy as np
     
 d = pd.read_csv(r'D:\a3\termplan_datas.csv')
 
-
-print(d['age'].skew(),"BEFORE OUTLIER TREATMENT IN AGE")
 d['age'] = np.where(d['age']<25.0,25.0,d['age'])
 d['age'] = np.where(d['age']>64.0,64.0,d['age'])
-print(d['age'].skew(),"After")
-print(d['balance'].describe())
-print(d['balance'].skew(),"before balance")
-print(d['balance'].quantile(0.10))
-print(d['balance'].quantile(0.90))
 d['balance'] = np.where(d['balance']<0.0,0.0,d['balance'])
 d['balance'] = np.where(d['balance']>3574.0,3574.0,d['balance'])
-print(d['balance'].skew())
-print(d['duration'].describe())
-print(d['duration'].quantile(0.10))
-print(d['duration'].quantile(0.90))
 d['duration'] = np.where(d['duration']<58.0,58.0,d['duration'])
 d['duration'] = np.where(d['duration']>548.0,548.0,d['duration'])
-print(d['duration'].skew())
-print(d['campaign'].describe())
-print(d['campaign'].quantile(0.10))
-print(d['campaign'].quantile(0.90))
 d['campaign'] = np.where(d['campaign']<1.0,1.0,d['campaign'])
 d['campaign'] = np.where(d['campaign']>5.0,5.0,d['campaign'])
-print(d['campaign'].skew())
 
 d = d.drop('default',axis=1)
 d = d.drop('loan',axis=1)
@@ -54,8 +38,6 @@ e = OrdinalEncoder()
 d_f2[['housing','contact','y']] = e.fit_transform(d_f2[['housing','contact','y']])
 a = {'month': {'jan': 1,'feb': 2,'mar': 3,'apr': 4,'may': 5,'jun': 6,'jul': 7,'aug': 8,'sep': 9,'oct': 10,'nov': 11,'dec': 12}}
 d_f2.replace(a,inplace=True)
-print(d_f2.head())
-print(d_f2.info())
 y = d_f2['y']
 X = d_f2.drop('y',axis=1)
 
