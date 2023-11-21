@@ -1,3 +1,4 @@
+import pickle
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -5,7 +6,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 
-df  = pd.read_csv(r'C:\California\California\housing.csv')
+df  = pd.read_csv(r'housing.csv')
 
 # Handle missing values for total_bedrooms. As the column does not follow normal distribution fill it with median
 df['total_bedrooms'].fillna(df['total_bedrooms'].median(), inplace=True)
@@ -20,7 +21,7 @@ df['median_income'] = np.clip(df['median_income'], 2.5, 5.0)
 # Grouping 'ocean_proximity' categories
 df['ocean_proximity'] = df['ocean_proximity'].replace(['NEAR OCEAN', 'NEAR BAY', 'ISLAND'], 'NEAR WATER')
 # Performing one hot encoding on nominal variables
-df = pd.get_dummies(df, columns=['ocean_proximity'], prefix ='', prefix_sep ='')
+df = pd.get_dummies(df, columns=['ocean_proximity'], prefix ='', prefix_sep ='').astype('float64')
 
 # MODELLING
 y = df['median_house_value']
@@ -52,3 +53,7 @@ gb_regressor = GradientBoostingRegressor(n_estimators=100, learning_rate=0.2, ra
 gb_regressor.fit(X_train, y_train)
 print('Gradient Boost Regressor results ', scoring(gb_regressor, X_test, y_test))
 # Here we are getting rmse to be around 58,000 so an error of 58,000 is in the housing price.
+
+randomForestPickle = pickle.dump(rf_regressor, open('regModel.pkl', 'wb'))
+pickled_model = pickle.load(open('regModel.pkl', 'rb'))
+
