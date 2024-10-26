@@ -10,11 +10,10 @@ from sklearn.ensemble import RandomForestClassifier
 d = pd.read_csv(r'termplan_dataset.csv')
 
 # Handling outliers and capping values
-d['age'] = np.clip(d['age'], 18, 70)
-d['balance'] = np.clip(d['balance'], 0, 4000).astype(int)
-d['duration'] = np.clip(d['duration'], 10, 700)
-d['campaign'] = np.clip(d['campaign'], 1, 5)
-
+d['age'] = np.clip(d['age'], 18, 70) # age column has no null values
+d['balance'] = np.clip(np.cbrt(d['balance']), -10.0, 25.0) # applied cube root transformation as column was positively skewed and was having negative and zero values
+d['duration'] = np.clip(np.cbrt(d['duration']), 1.0, 10.2) # applied cube root transformation as column was positively skewed and was having negative and zero values
+d['campaign'] = np.clip(np.cbrt(d['campaign']), 1.0, 2.5) # applied cube root transformation as column was positively skewed
 # Grouping 'job' categories
 d['job'] = d['job'].replace(['unknown', 'student', 'entrepreneur', 'housemaid'], ['unemployed', 'unemployed', 'self-employed', 'self-employed'])
 
@@ -36,14 +35,6 @@ month_to_quarter = {'jan': 1, 'feb': 1, 'mar': 1,
                     'oct': 4, 'nov': 4, 'dec': 4}
 d['month'] = d['month'].map(month_to_quarter).astype(int)
 
-# Binning balance column in 3 categories
-bins = [0, 1001, 2001, 4001]
-bin_labels = [1, 2, 3]
-d['balance'] = pd.cut(d['balance'], bins=bins, labels=bin_labels, right=False).astype(int)
-
-# Binning duration campaign in 2 categories
-d['duration'] = (d['duration'] > 319).astype(int)
-
 # Performing one hot encoding on nominal variables
 columns_to_cast_as_int = ['job_management', 'job_retired', 'job_self-employed', 'job_services', 'job_technician', 'job_unemployed', 'job_blue-collar', 'marital_divorced', 'marital_single', 'marital_married', 'job_admin.', 'contact_cellular', 'contact_telephone', 'contact_unknown']
 df_encoded = pd.get_dummies(d, columns=['job', 'marital', 'contact'], prefix=['job', 'marital', 'contact'])
@@ -61,19 +52,18 @@ def scoring(y_test,y_predict):
     print('classification_report', classification_report(y_test,y_predict))
     print('confusion_matrix', confusion_matrix(y_test,y_predict))
 
+X_train,X_test,y_train,y_test = train_test_split(X, y, test_size = 0.25, random_state=42)
+
 # Handling imbalanced dataset using SMOTE techniques
 smote = SMOTE(sampling_strategy='auto', random_state=42)
-X_resampled, y_resampled = smote.fit_resample(X, y)
-
-X_train,X_test,y_train,y_test = train_test_split(X_resampled, y_resampled, test_size = 0.25, random_state=42)
+X_resampled, y_resampled = smote.fit_resample(X_train, y_train)
 
 logisticRegression = LogisticRegression()
-logisticRegression.fit(X_train,y_train)
+logisticRegression.fit(X_resampled,y_resampled)
 print('LogisticRegression')
 scoring(y_test, logisticRegression.predict(X_test))
 
-randomForestClassifier = RandomForestClassifier()
-randomForestClassifier.fit(X_train, y_train)
+randomForestClassifier = RandomForestClassifier(oob_score=True, random_state=42)
+randomForestClassifier.fit(X_resampled,y_resampled)
 print('Random Forest Classifer')
 scoring(y_test, randomForestClassifier.predict(X_test))
-
